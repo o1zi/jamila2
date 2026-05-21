@@ -582,11 +582,11 @@ async function saveNew(section, label) {
   const sig     = document.getElementById('fSig').value.trim();
   if (!author || !title || !content) { toast('⚠️ الكاتب والعنوان والنص مطلوبة'); return; }
   try {
-    await createPoem({section, author, title, content, signature: sig||null, sort_order: Date.now()});
+    await createPoem({section, author, title, content, signature: sig||null, sort_order: Math.floor(Date.now() / 1000)});
     toast('✅ تم الحفظ');
     await loadAll();
     showSectionManager(section, label);
-  } catch(e) { toast('❌ خطأ في الحفظ'); }
+  } catch(e) { toast('❌ ' + e.message); }
 }
 
 // ── EDIT FORM ──
