@@ -112,6 +112,11 @@ audio{width:100%;max-width:480px;border-radius:40px;}
 .dua-block{text-align:center;padding:3rem 2rem;font-family:'Amiri',serif;font-size:1.4rem;color:var(--gold-light);line-height:2.6;border-top:1px solid var(--border);margin-top:1rem;}
 .dua-block .ameen{display:block;margin-top:1rem;font-size:1rem;color:var(--gold);opacity:.55;letter-spacing:.2em;}
 
+/* VISITOR BAR */
+.visitor-bar{position:relative;z-index:101;background:rgba(10,8,5,.97);border-bottom:1px solid rgba(201,168,76,.15);padding:.45rem 1.5rem;text-align:center;font-family:'Noto Naskh Arabic',serif;font-size:.82rem;color:var(--ink-soft);letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:.6rem;}
+.visitor-bar .vcount{color:var(--gold-light);font-weight:700;font-size:.92rem;font-family:'Amiri',serif;}
+.visitor-bar .vdot{color:var(--gold);opacity:.4;font-size:.5rem;}
+
 /* FOOTER */
 footer{position:relative;z-index:1;text-align:center;padding:4rem 2rem;border-top:1px solid var(--border);}
 .footer-name{font-size:1.6rem;color:var(--gold);font-family:'Amiri',serif;margin-bottom:.5rem;}
@@ -172,6 +177,14 @@ footer{position:relative;z-index:1;text-align:center;padding:4rem 2rem;border-to
 </style>
 </head>
 <body>
+<!-- VISITOR BAR -->
+<div class="visitor-bar">
+  <span class="vdot">✦</span>
+  <span>عدد الزوار</span>
+  <span class="vcount" id="visitorCount">...</span>
+  <span class="vdot">✦</span>
+</div>
+
 <div class="stars" id="stars"></div>
 
 <!-- HERO -->
@@ -684,7 +697,56 @@ for(let i=0;i<140;i++){
   sc.appendChild(s);
 }
 
+// ── VISITOR COUNTER ──
+async function initVisitorCounter() {
+  const el = document.getElementById('visitorCount');
+  try {
+    // Increment only once per browser session
+    if (!sessionStorage.getItem('visited')) {
+      sessionStorage.setItem('visited', '1');
+      await fetch(`${SUPA_URL}/visitors`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': `Bearer ${SUPA_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({id: 1, count: 1})
+      }).catch(async () => {
+        // If insert fails (row exists), do upsert via rpc or just fetch
+      });
+      // Use upsert to increment
+      await fetch(`${SUPA_URL}/rpc/increment_visitors`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': `Bearer ${SUPA_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: '{}'
+      }).catch(() => {});
+    }
+    // Fetch current count
+    const res = await fetch(`${SUPA_URL}/visitors?select=count&id=eq.1`, {
+      headers: {'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`}
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data[0]) {
+        el.textContent = Number(data[0].count).toLocaleString('ar-SA');
+        return;
+      }
+    }
+  } catch(e) {}
+  // Fallback: local session count
+  const local = parseInt(localStorage.getItem('v_count') || '0') + (sessionStorage.getItem('v_new') ? 0 : 1);
+  if (!sessionStorage.getItem('v_new')) { sessionStorage.setItem('v_new','1'); localStorage.setItem('v_count', local); }
+  el.textContent = Number(localStorage.getItem('v_count') || 1).toLocaleString('ar-SA');
+}
+
 // ── INIT ──
+initVisitorCounter();
 loadAll();
 </script>
 </body>
