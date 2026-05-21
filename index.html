@@ -386,9 +386,11 @@ const SECTIONS = {
 
 // ── SUPABASE HELPERS ──
 async function dbFetch(path, opts={}) {
+  const headers = {'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`,
+              'Prefer': 'return=minimal', ...opts.headers};
+  if (opts.method !== 'DELETE') headers['Content-Type'] = 'application/json';
   const res = await fetch(`${SUPA_URL}${path}`, {
-    headers: {'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`,
-              'Content-Type': 'application/json', 'Prefer': 'return=minimal', ...opts.headers},
+    headers,
     ...opts
   });
   if (!res.ok) throw new Error(await res.text());
