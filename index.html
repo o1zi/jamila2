@@ -406,7 +406,7 @@ async function updatePoem(id, data) {
   return dbFetch(`/poems?id=eq.${id}`, {method:'PATCH', body: JSON.stringify(data)});
 }
 async function deletePoem(id) {
-  return dbFetch(`/poems?id=eq.${id}`, {method:'DELETE', headers:{'Prefer':''}});
+  return dbFetch(`/poems?id=eq.${id}`, {method:'DELETE'});
 }
 
 // ── RENDER ──
@@ -620,7 +620,7 @@ async function saveEdit(section, label) {
     toast('✅ تم التعديل');
     await loadAll();
     showSectionManager(section, label);
-  } catch(e) { toast('❌ خطأ في التعديل'); }
+  } catch(e) { toast('❌ ' + e.message); }
 }
 
 // ── DELETE ──
@@ -640,7 +640,7 @@ async function doDelete(id, section, label) {
     toast('🗑️ تم الحذف');
     await loadAll();
     showSectionManager(section, label);
-  } catch(e) { toast('❌ خطأ في الحذف'); }
+  } catch(e) { toast('❌ ' + e.message); }
 }
 
 // ── SCROLL REVEAL ──
