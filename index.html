@@ -388,7 +388,7 @@ const SECTIONS = {
 async function dbFetch(path, opts={}) {
   const res = await fetch(`${SUPA_URL}${path}`, {
     headers: {'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`,
-              'Content-Type': 'application/json', 'Prefer': 'return=representation', ...opts.headers},
+              'Content-Type': 'application/json', 'Prefer': 'return=minimal', ...opts.headers},
     ...opts
   });
   if (!res.ok) throw new Error(await res.text());
