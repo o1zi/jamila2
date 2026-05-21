@@ -701,36 +701,28 @@ for(let i=0;i<140;i++){
 async function initVisitorCounter() {
   const el = document.getElementById('visitorCount');
   try {
-    // سجّل زيارة جديدة مرة واحدة لكل session
-    if (!sessionStorage.getItem('visited')) {
-      sessionStorage.setItem('visited', '1');
-      await fetch(`${SUPA_URL}/visitors`, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPA_KEY,
-          'Authorization': `Bearer ${SUPA_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({})
-      });
-    }
-    // اجلب إجمالي الزيارات
-    const res = await fetch(`${SUPA_URL}/visitors?select=id`, {
+    // سجّل زيارة في كل تحميل للصفحة
+    await fetch(`${SUPA_URL}/visitors`, {
+      method: 'POST',
       headers: {
         'apikey': SUPA_KEY,
         'Authorization': `Bearer ${SUPA_KEY}`,
-        'Prefer': 'count=exact',
-        'Range': '0-0'
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ visited_at: new Date().toISOString() })
+    });
+    // اجلب العدد الكلي
+    const res = await fetch(`${SUPA_URL}/visitors?select=id`, {
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`
       }
     });
     if (res.ok) {
-      const range = res.headers.get('content-range');
-      const total = range ? range.split('/')[1] : null;
-      if (total && total !== '*') {
-        el.textContent = Number(total).toLocaleString('ar-SA');
-        return;
-      }
+      const data = await res.json();
+      el.textContent = Number(data.length).toLocaleString('ar-SA');
+      return;
     }
   } catch(e) {}
   el.textContent = '—';
