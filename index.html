@@ -650,6 +650,7 @@ const revealObs = new IntersectionObserver(entries=>{
   entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
 },{threshold:.08,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
+setTimeout(()=>document.querySelectorAll('.reveal').forEach(el=>el.classList.add('visible')), 4000);
 
 // ── ACTIVE NAV ──
 const navLinks = document.querySelectorAll('nav a');
