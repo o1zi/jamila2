@@ -701,7 +701,7 @@ for(let i=0;i<140;i++){
 async function initVisitorCounter() {
   const el = document.getElementById('visitorCount');
   try {
-    // Increment only once per browser session
+    // سجّل زيارة جديدة مرة واحدة لكل session
     if (!sessionStorage.getItem('visited')) {
       sessionStorage.setItem('visited', '1');
       await fetch(`${SUPA_URL}/visitors`, {
@@ -712,37 +712,28 @@ async function initVisitorCounter() {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({id: 1, count: 1})
-      }).catch(async () => {
-        // If insert fails (row exists), do upsert via rpc or just fetch
+        body: JSON.stringify({})
       });
-      // Use upsert to increment
-      await fetch(`${SUPA_URL}/rpc/increment_visitors`, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPA_KEY,
-          'Authorization': `Bearer ${SUPA_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: '{}'
-      }).catch(() => {});
     }
-    // Fetch current count
-    const res = await fetch(`${SUPA_URL}/visitors?select=count&id=eq.1`, {
-      headers: {'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`}
+    // اجلب إجمالي الزيارات
+    const res = await fetch(`${SUPA_URL}/visitors?select=id`, {
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Prefer': 'count=exact',
+        'Range': '0-0'
+      }
     });
     if (res.ok) {
-      const data = await res.json();
-      if (data && data[0]) {
-        el.textContent = Number(data[0].count).toLocaleString('ar-SA');
+      const range = res.headers.get('content-range');
+      const total = range ? range.split('/')[1] : null;
+      if (total && total !== '*') {
+        el.textContent = Number(total).toLocaleString('ar-SA');
         return;
       }
     }
   } catch(e) {}
-  // Fallback: local session count
-  const local = parseInt(localStorage.getItem('v_count') || '0') + (sessionStorage.getItem('v_new') ? 0 : 1);
-  if (!sessionStorage.getItem('v_new')) { sessionStorage.setItem('v_new','1'); localStorage.setItem('v_count', local); }
-  el.textContent = Number(localStorage.getItem('v_count') || 1).toLocaleString('ar-SA');
+  el.textContent = '—';
 }
 
 // ── INIT ──
